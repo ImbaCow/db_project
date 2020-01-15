@@ -1,0 +1,33 @@
+version: '3.1'
+services:
+  db:
+    build: ./db
+    volumes:
+      - ./db:/var/lib/mysql
+    environment: 
+      - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
+      - MYSQL_DATABASE=${MYSQL_DATABASE}
+    command: /bin/bash -c "mysqld --user=root --innodb-flush-method=fsync && /wait-for-it.sh db:3306"
+  adminer:
+    image: adminer
+    ports:
+      - 5080:8080
+  migrations:
+    image: migrate/migrate
+    depends_on:
+      - "db"
+    volumes: 
+      - ./migrations:/migrations
+    command: -path=/migrations/ -database mysql://root:${MYSQL_ROOT_PASSWORD}@(db:3306)/${MYSQL_DATABASE} up
+  app:
+    build: ./app
+    depends_on:
+      - "db"
+    ports:
+      - 4080:8080
+    environment: 
+      - APP_BIND_ADDR=:8080
+      - APP_LOG_LEVEL=${APP_LOG_LEVEL}
+      - APP_DATABASE_URL=root:${MYSQL_ROOT_PASSWORD}@(db:3306)/${MYSQL_DATABASE}
+      - APP_SESSION_KEY=${APP_SESSION_KEY}
+      - APP_SESSION_PATH=${APP_SESSION_PATH}

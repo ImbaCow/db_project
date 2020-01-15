@@ -1,0 +1,8 @@
+.vscode
+
+app/go.sum
+app/*.exe
+
+db/*
+!db/Dockerfile
+!db/wait-for-it.sh
